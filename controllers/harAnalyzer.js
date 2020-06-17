@@ -8,22 +8,22 @@ exports.analyzeUrl = async (req, res) => {
     const harFileName = 'results.har';
     let examinedUrlHostname = url.hostname;
 
-    // downloadHarFile(url);
-
     // Get HAR file using puppeteer
-    // async function downloadHarFile(url) {
-
-    const browser = await puppeteer.launch({args: ['--no-sandbox']});
+    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
     const page = await browser.newPage();
 
     const har = new PuppeteerHar(page);
     await har.start({ path: harFileName });
 
-    await page.goto(url.href);
+    try {
+        await page.goto(url.href);
+    } catch (error) {
+        return res.status(500).send('Something broke!');
+    }
 
     await har.stop();
     await browser.close();
-    // }
+
     // Read saved HAR file
     const fileContents = fs.readFileSync(harFileName);
     const jsonContents = JSON.parse(fileContents);
@@ -45,17 +45,13 @@ exports.analyzeUrl = async (req, res) => {
 
     // chop urls into paths
     let paths = examinedUrlMediaStructure.map(url => {
-        // console.log(url);
-        // console.log(parseUrl(url).pathname.substring(1).split('/'));
         return parseUrl(url).pathname.split('/');
     });
 
     // build tree structure from url paths
-    console.log(paths);
-    var tree = arrangeIntoTree(paths);
+    let tree = createJsonTree(paths);
     let mediaStructure = JSON.stringify(tree, null, 4);
 
-    console.log(mediaStructure);
     res.json({
         mediaStructure: mediaStructure,
         externalResourceRequests: externalResourceRequests,
@@ -63,27 +59,24 @@ exports.analyzeUrl = async (req, res) => {
     });
 }
 
-function arrangeIntoTree(paths) {
-    var tree = [];
+function createJsonTree(paths) {
+    let tree = [];
 
-    for (var i = 0; i < paths.length; i++) {
-        var path = paths[i];
-        var currentLevel = tree;
-        for (var j = 0; j < path.length; j++) {
-            var part = path[j];
-            var existingPath = findWhere(currentLevel, 'text', part);
+    for (let i = 0; i < paths.length; i++) {
+        let path = paths[i];
+        let currentLevel = tree;
+        for (let j = 0; j < path.length; j++) {
+            let part = path[j];
+            let existingPath = findWhere(currentLevel, 'text', part);
 
             if (existingPath) {
                 currentLevel = existingPath.nodes;
             } else {
-                var newPart = {
+                let newPart = {
                     text: part,
                     nodes: []
                 }
-                // var newPart = {
-                //     text: part
-                // }
-                
+
                 currentLevel.push(newPart);
                 currentLevel = newPart.nodes;
             }
@@ -92,11 +85,13 @@ function arrangeIntoTree(paths) {
     return tree;
 
     function findWhere(array, key, value) {
-        t = 0; // t is used as a counter
-        while (t < array.length && array[t][key] !== value) { t++; }; // find the index where the id is the as the aValue
+        element = 0;
+        while (element < array.length && array[element][key] !== value) {
+            element++;
+        };
 
-        if (t < array.length) {
-            return array[t]
+        if (element < array.length) {
+            return array[element]
         } else {
             return false;
         }

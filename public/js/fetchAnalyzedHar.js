@@ -8,7 +8,10 @@ function fetchHarAnalyzedHar() {
     let mediaStructureHeader = document.getElementById('mediaStructureHeader');
     let externalResourceHeader = document.getElementById('externalResourceHeader');
     let cookiesHeader = document.getElementById('cookiesHeader');
+    let logger = document.getElementById('logger');
 
+    logger.innerHTML = 'Processing. Please wait a few seconds...';
+    logger.style.color = 'blue';
     fetch('/', {
         method: 'POST',
         headers: {
@@ -19,7 +22,6 @@ function fetchHarAnalyzedHar() {
     })
         .then(response => response.json())
         .then(payload => {
-            console.log(payload.externalResourceRequests);
             $('#tree').treeview({
                 data: payload.mediaStructure
             });
@@ -29,7 +31,13 @@ function fetchHarAnalyzedHar() {
             mediaStructureHeader.innerHTML = 'Media structure';
             externalResourceHeader.innerHTML = 'External Resource Requests';
             cookiesHeader.innerHTML = 'Cookies';
-        });
+            logger.innerHTML = 'Success!';
+            logger.style.color = 'green';
+        })
+        .catch((error) => {
+            logger.innerHTML = 'Uh oh. Something went wrong. Please try again. Remember to provide full path URL!';
+            logger.style.color = 'red';
+          });
 }
 
 function generateTableHead(table, data) {
