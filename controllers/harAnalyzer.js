@@ -13,7 +13,7 @@ exports.analyzeUrl = async (req, res) => {
     // Get HAR file using puppeteer
     // async function downloadHarFile(url) {
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({args: ['--no-sandbox']});
     const page = await browser.newPage();
 
     const har = new PuppeteerHar(page);
