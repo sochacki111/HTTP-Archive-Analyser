@@ -37,7 +37,7 @@ function fetchHarAnalyzedHar() {
         .catch((error) => {
             logger.innerHTML = 'Uh oh. Something went wrong. Please try again. Remember to provide full path URL!';
             logger.style.color = 'red';
-          });
+        });
 }
 
 function generateTableHead(table, data) {
